@@ -1,0 +1,154 @@
+---
+title: "ES207_HW3"
+output: html_document
+author: "Erik Bolch"
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+4. The Great Lakes Environmental Research Laboratory of the U.S. National
+Oceanic and Atmospheric Administration (NOAA-GLERL) routinely
+monitors the western basin of Lake Erie from May to October
+every year. The data file LakeErie1.csv includes all available data up
+to the end of 2014. Two variables are of particular interest in studying
+lake eutrophication. They are the total phosphorus (TP) and chlorophyll
+a (chla) concentrations. These are concentration variables and we often
+assume that their distributions are approximately normal.
+
+
+Read the data into R and use the graphics to evaluate whether TP
+and chla are normally distributed.
+
+```{r}
+require(tidyverse)
+require(ggplot2)
+erie <- read_csv("./data/LakeErie1.csv")
+head(erie)
+```
+### TSS Histogram/QQPlot
+```{r}
+erie %>%
+  ggplot(aes(TSS))+ geom_histogram(binwidth = 5, na.rm = T)
+erie %>%  
+  ggplot(.,aes(sample = TSS))+
+    geom_qq(na.rm = T) + geom_qq_line(na.rm = T)
+
+```
+### Chla Histogram/QQPlot
+```{r}
+erie %>%
+  ggplot(aes(chla)) + geom_histogram(binwidth = 2, na.rm = T)
+erie %>%
+  ggplot(.,aes(sample = chla))+
+    geom_qq(na.rm = T) + geom_qq_line(na.rm = T)
+
+```
+
+<span style="color:blue">These distributions don't look normal, they are skewed, which is typical of an environmental dataset.</span>
+
+Western Lake Erie's nutrient concentrations are largely associated with Maumee River input, which varies from year to year due to variation in weather conditions. As a result, we expect that TP, as well as chla, concentration distributions vary by year. Use the function qqmath (from package lattice) to draw normal Q-Q plots of TP and chla concentrations by year. Are the annual concentration distributions closer to being normal?
+
+```{r}
+require(lattice)
+z<-qqmath(~chla | factor(Year), data = erie, distribution = qnorm, main = "Q-Q Plot",  ylab = "[Chla]",
+          panel = function(x, ...) {
+            panel.qqmath(x, ...)
+            panel.qqmathline(x, ...)
+            })
+plot(z)
+
+```
+
+<span style="color:blue">Chla concentration data only exists for 1 year (2013), plotted above. The log normal distribution is skewed, because the values depart from the q-q line at each end, meaning there are more values above and below the mean. In a normal distribution the majority of values would be located on or close to the mean.</span>
+
+```{r}
+y<-qqmath(~TP | factor(Year), data = erie,  distribution = qnorm, main = "Q-Q Plot", ylab = "[Total Phosphorous]",
+          panel = function(x, ...) {
+            panel.qqmath(x, ...)
+            panel.qqmathline(x, ...)
+            })
+
+plot(y)
+
+```
+
+<span style="color:blue"> Even after separating by year, the sampled data have a slight curve at both ends, indicating a skewed distribution.</span>
+
+5. In addition to NOAA-GLERL, several other institutions also have routine
+monitoring programs on Lake Erie. Data file LakeErie2.csv contains
+TP and chla concentration data collected by NOAA-GLERL,
+Ohio Department of Natural Resources (ODNR), and The University
+of Toledo (Toledo).
+
+(a) Compare the distribution of the TP concentration data from NOAA to the same from ODNR:
+
+Are the two distributions different?
+
+```{r}
+erie.2 <- read_csv("./data/LakeErie2.csv")
+
+erie.2s<-split(erie.2,erie.2$INSTITUTION)
+
+erie.2.NOAA<- erie.2s[[1]]
+erie.2.ODNR<- erie.2s[[2]]
+erie.2.tol<- erie.2s[[3]]
+
+qqplot(erie.2.NOAA$TP,erie.2.ODNR$TP, xlab = "NOAA TP", ylab = "ODNR TP")
+abline(0,1)
+```
+
+<span style="color:blue">Yes, the distributions are different, they do not fall along a line line with a slope of 1. </span>
+
+If so, is the difference between the two TP concentration distributions more likely to be additive or multiplicative?
+
+<span style="color:blue">The difference is more likely to be multiplicative because the points have a higher slope than approximately 1, not just a higher intercept as would be expected for additive.</span>
+
+Are the variances of the two distributions the same?
+
+```{r}
+var(erie.2.NOAA$TP, na.rm = T)
+var(erie.2.ODNR$TP, na.rm = T)
+
+hist(erie.2.NOAA$TP)
+hist(erie.2.ODNR$TP)
+
+qqnorm(erie.2.NOAA$TP)
+qqnorm(erie.2.ODNR$TP)
+
+```
+
+<span style="color:blue"> The variances are quite different, the ODNR variance being higher by a factor of 5. This the the result of being a smaller sample size, with a couple very high samples, which is greatly impacting the distribution.</span>
+
+(b) Describe the difference in the two distributions in non-technical terms.
+
+<span style="color:blue"> The distribution of samples from ODNR has several samples with very high TP concentrations and a total of only 260 samples compared to the NOAA data, which contains only one very high TP sample and has a total of 475 samples. Based on this information, one would think that it's more likely that you have a very high TP concentration if referencing the ODNR data rather than the NOAA data. This change difference in the samples results in plots of different shapes when compared to an expected normal distribution. The upward curve of the NOAA QQplot indicates that there are more samples away from the average than expected, while the S shaped QQplot from the ODNR indicates that there are extreme values not expected in a normal distribution. This difference of more than expected on the edges, not the average of the data can also be seen in the histograms.</span>
+
+(c) Repeat the previous comparison to compare TP distributions from Toledo and NOAA, and ODNR and Toledo, and summarize the results.
+
+```{r}
+qqplot(erie.2.NOAA$TP,erie.2.tol$TP, xlab = "NOAA TP", ylab = "Toledo TP")
+abline(0,1)
+```
+
+
+```{r}
+qqplot(erie.2.ODNR$TP,erie.2.tol$TP, xlab = "ODNR TP", ylab = "Toledo TP")
+abline(0,1)
+```
+
+<span style="color:blue"> The NOAA and Toledo TP concentrations appear to have more similar distributions than the NOAA and ODNR data. They are still multiplicative due to the increased slope of the points as TP concentration increases at both sites. </span>
+
+<span style="color:blue">The ODNR and Toledo TP concentrations appear to also have a multiplicative difference in distribution, however, because of the axes, the slope is lower than 1 instead of higher. Also, the 4 or 5 very high TP concentrations from the ODNR dataset are drastically affecting the distribution making it harder to discern the difference. Whether they are abnormally high due to some event, or are bad data they have a large impact on the distribution of that dataset.</span>
+
+
+7. Figure 3.16 explores the dependency of the ozone concentration-solar radiation relationship on wind speed and temperature. Use the same conditional plot to examine the dependency of the ozone concentration-temperature relationship on wind speed and solar radiation, and the ozone concentration-wind speed relationship on solar radiation and temperature.
+
+<span style="color:blue"> The relationship of ozone concentration-temperature is that the log of ozone concentration increases with temperature. Wind speed appears decrease the affect temperature plays on the ozone concentration. As for the effect of solar ratiation on the ozone concentration-temperature relationship, increased solar radiation has an almost a linear relationship  with the log-ozone concentration, but increased solar radiation appears to be correlated with of the increase in temperature, higher values of solar radiation coincide with higher temperatures.</span>
+
+<span style="color:blue">The relationship between ozone-concentration and wind speed (concentration decreases with increased wind speed), appears to be unaffected by solar radiation or temperature, regardless of temperature or solar radiation, the strength of the existing relationship between those variables and ozone concentration decreases regardless of whether solar radiation or temeprature is high or low.</span>
+
+
+
+
+
+
