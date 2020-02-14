@@ -143,9 +143,56 @@ abline(0,1)
 
 7. Figure 3.16 explores the dependency of the ozone concentration-solar radiation relationship on wind speed and temperature. Use the same conditional plot to examine the dependency of the ozone concentration-temperature relationship on wind speed and solar radiation, and the ozone concentration-wind speed relationship on solar radiation and temperature.
 
-<span style="color:blue"> The relationship of ozone concentration-temperature is that the log of ozone concentration increases with temperature. Wind speed appears decrease the affect temperature plays on the ozone concentration. As for the effect of solar ratiation on the ozone concentration-temperature relationship, increased solar radiation has an almost a linear relationship  with the log-ozone concentration, but increased solar radiation appears to be correlated with of the increase in temperature, higher values of solar radiation coincide with higher temperatures.</span>
 
-<span style="color:blue">The relationship between ozone-concentration and wind speed (concentration decreases with increased wind speed), appears to be unaffected by solar radiation or temperature, regardless of temperature or solar radiation, the strength of the existing relationship between those variables and ozone concentration decreases regardless of whether solar radiation or temeprature is high or low.</span>
+```{r}
+require(lattice)
+
+WindSpeed <- equal.count(airquality$Wind, 3, 0.25)
+Temperature <- equal.count(airquality$Temp, 3, 0.25)
+SolarR <- equal.count(airquality$Solar.R, 3, 0.25)
+print(
+  xyplot(sqrt(Ozone) ~ Temperature|WindSpeed*SolarR,
+         data=airquality,
+         panel=function(x,y,...){
+           #            panel.loess(x, y, span=1, degree=1, ...)
+           panel.grid()
+           panel.lmline(x, y, col="grey",...)
+           panel.xyplot(x, y, col=1, cex=0.5, ...)
+         },
+         main="Ozone Concentration-Temperature",
+         ylab=list(label="Sqrt Ozone", cex=0.6),
+         xlab=list(label="Temperature", cex=0.6),
+         scales=list(x=list(alternating=c(1, 2, 1))),
+         #       between=list(y=1),
+         par.strip.text=list(cex=0.4), aspect=1,
+         par.settings=list(axis.text=list(cex=0.4)))
+)
+
+print(
+  xyplot(sqrt(Ozone) ~ WindSpeed|SolarR*Temperature,
+         data=airquality,
+         panel=function(x,y,...){
+           #            panel.loess(x, y, span=1, degree=1, ...)
+           panel.grid()
+           panel.lmline(x, y, col="grey",...)
+           panel.xyplot(x, y, col=1, cex=0.5, ...)
+         },
+         main="Ozone Concentration-Wind Speed",
+         ylab=list(label="Sqrt Ozone", cex=0.6),
+         xlab=list(label="Wind Speed", cex=0.6),
+         scales=list(x=list(alternating=c(1, 2, 1))),
+         #       between=list(y=1),
+         par.strip.text=list(cex=0.4), aspect=1,
+         par.settings=list(axis.text=list(cex=0.4)))
+)
+
+```
+
+<span style="color:blue"> Both Temperature, and Wind speed appear to have monotonic relationships with the sqrt transformed Ozone concentration, though higher temperature corresponds with higher Ozone, while higher wind speed corresponds with lower Ozone. </span>
+
+<span style="color:blue">For the plot of Ozone Conc-Temperature, in the majority of cases that wind speed increases, the strength of the relationship between Ozone Conc and temperature seems to decrease, as indicated by the decreasing slope of the lines, with the exception of the center row (mid Solar R). This suggests that there may be a relationship, but its unclear. As for the effect of Solar R, on the Ozone-Temp relationship, theres not sufficient evidence to suggest a dependency.</span>
+
+<span style="color:blue">For the plot of Ozone Conc-Windspeed the strength of the ozone-wind relationship appears to increase in strength (steeper slopes) as Solar R increases at high temperatures, but almost appears to do the opposite at lower temperatures, and seems to have no effect a mid-range temperatures. Increases in temperature seem to have a stronger effect on the ozone-wind relationship at high Solar R. In either case I don't think theres sufficient evidence to suggest a dependency as exists in the original 3.16 plot, where Temp and Windspeed have a clear effect on the relationship between Ozone Concentration and Solar radiation.</span>
 
 
 
